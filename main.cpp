@@ -58,8 +58,16 @@ void colision_particulas(Particulas &A,int posA, int posB){
     A.velocidadesX[posA] = A.velocidadesX[posA] + A.velocidadesX[posB];
     A.velocidadesY[posA] = A.velocidadesY[posA] + A.velocidadesY[posB];
     A.velocidadesZ[posA] = A.velocidadesZ[posA] + A.velocidadesZ[posB];
-  //  A.masses.erase(A.begin()+posB);
-
+    A.posicionesX[posB]=0;
+    A.posicionesY[posB]=0;
+    A.posicionesZ[posB]=0;
+    A.velocidadesX[posB]=0;
+    A.velocidadesY[posB]=0;
+    A.velocidadesZ[posB]=0;
+    A.fuerzasX[posB]=0;
+    A.fuerzasY[posB]=0;
+    A.fuerzasZ[posB]=0;
+    A.masas[posB]=0;
 }
 
 int generar_particulas(Particulas &particulas,mt19937_64 &generator,uniform_real_distribution<double> &dis,normal_distribution<double> &d){
@@ -235,10 +243,10 @@ int main(int argc, char* argv[]) {
             aceleracion_y_velocidad(particulas,j);
             actualizar_posicion(particulas,j);
             //Cambios de hoy borrar estas 3 lineas de abajo
-            //int pos = comprobar_colision(particulas, j);
-            //if(pos != -1){
-              //  colision_particulas(particulas, particulas[pos], particulas, pos);
-            //}
+            int pos = comprobar_colision(particulas, j);
+            if(pos != -1){
+                colision_particulas(particulas,j, pos);
+            }
 
         }
     }
