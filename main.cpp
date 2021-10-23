@@ -6,7 +6,8 @@
 #include <vector>
 using namespace std;
 
-
+//realizado para 4000 objetos 
+//debido a que c++ no admite arrays de longitud variable
 struct Particulas{
     double posicionesX[4000];
     double posicionesY[4000];
@@ -20,10 +21,10 @@ struct Particulas{
     double masas[4000];
 
 };
-//const double G=00000000006674;
+
 const double G= 6.674*(pow(10,-11));
 
-//global variables
+//variables globales
 int num_objects;
 int num_iteration;
 int random_seed;
@@ -35,9 +36,8 @@ double accY;
 double accZ;
 
 
-
+//crea el archivo init_config.txt
 int init_config(Particulas &particulas){
-    //crea el archivo en cmake-buiild-debug
     fstream file;
     file.open("init_config.txt",fstream::in | fstream::out | fstream::trunc);
     file<<fixed<<showpoint;
@@ -53,6 +53,7 @@ int init_config(Particulas &particulas){
     file.close();
     return 0;
 }
+//si 2 particulas han colisionado
 void colision_particulas(Particulas &A,int posA, int posB){
     A.masas[posA] = A.masas[posA] + A.masas[posB];
     A.velocidadesX[posA] = A.velocidadesX[posA] + A.velocidadesX[posB];
@@ -69,7 +70,7 @@ void colision_particulas(Particulas &A,int posA, int posB){
     A.fuerzasZ[posB]=0;
     A.masas[posB]=0;
 }
-
+//generar las particulas
 int generar_particulas(Particulas &particulas,mt19937_64 &generator,uniform_real_distribution<double> &dis,normal_distribution<double> &d){
     for(int i = 0; i < num_objects ; i++){
         particulas.posicionesX[i] = dis(generator);
@@ -87,7 +88,7 @@ int generar_particulas(Particulas &particulas,mt19937_64 &generator,uniform_real
     return 0;
 
 }
-
+//comprobar si 2 particulas han colisionado
 int comprobar_colision(Particulas &particulas, int pos){
     for(int i = 0; i < num_objects; i++){
         if(particulas.masas[i] != particulas.masas[pos]){
@@ -102,7 +103,8 @@ int comprobar_colision(Particulas &particulas, int pos){
     }
     return -1;
 }
-
+//cada particula recorre toda la lista de particulas
+//y se le suma la fuerza que le aplica cada una
 void fuerza_gravitatoria(Particulas &particulas, int posA){
     for(int i=0;i<num_objects;i++){
         if(particulas.masas[posA] != particulas.masas[i]){
@@ -128,7 +130,7 @@ void fuerza_gravitatoria(Particulas &particulas, int posA){
     }
 }
 
-
+//a=f/m,v=v0+a*dt
 void aceleracion_y_velocidad(Particulas &p, int posA){
     accX = p.fuerzasX[posA]/p.masas[posA];
     accY = p.fuerzasY[posA]/p.masas[posA];
@@ -138,7 +140,7 @@ void aceleracion_y_velocidad(Particulas &p, int posA){
     p.velocidadesZ[posA]+= accZ*time_step;
 }
 
-
+//x=x0+v*dt
 void actualizar_posicion(Particulas &p, int posA){
     p.posicionesX[posA]+= p.velocidadesX[posA]*time_step;
     p.posicionesY[posA]+= p.velocidadesY[posA]*time_step;
@@ -167,14 +169,13 @@ void actualizar_posicion(Particulas &p, int posA){
         p.posicionesZ[posA]=size_enclosure;
         p.velocidadesZ[posA]=-p.velocidadesZ[posA];
     }
-
-
-
+    //reiniciar las fuerzas despues de actualizar la posicion
     p.fuerzasX[posA]=0;
     p.fuerzasY[posA]=0;
     p.fuerzasZ[posA]=0;
 
 }
+//crear el archivo final_config.txt
 void final_config(Particulas &particulas){
     //crea el archivo en cmake-buiild-debug
     fstream file;
@@ -201,7 +202,7 @@ int main(int argc, char* argv[]) {
         cerr << "Número de parámetros Inválido" << endl;
         return -1;
     }
-    //dar valor a los paremetros
+    ////dar valor a las variables globales
     num_objects = atoi(argv[1]);
     num_iteration = atoi(argv[2]);
     random_seed =atoi(argv[3]);
@@ -230,19 +231,20 @@ int main(int argc, char* argv[]) {
         return -1;
     }
     cout<<"Argumentos:\n"<<"num_objects: "<<num_objects<<"\nnum_iterations: "<<num_iteration<<"\nrandom_seed: "<<random_seed<<"\nsize_enclosure: "<<size_enclosure<<"\ntime_step: "<<time_step<<endl;
+    //generacion de numeros aleatorios
     mt19937_64 generator(random_seed);
     uniform_real_distribution<double> dis{0.0, size_enclosure};
     normal_distribution<double> d{pow(10.0,21.0), pow(10.0, 15.0)};
+    //crear la lista de particulas, darles valores iniciales y crear el init_config.txt
     Particulas particulas;
     generar_particulas(particulas,generator,dis,d);
     init_config(particulas);
-
+    //por cada iteracion y particula, realizar las funciones anteriormente descritas
     for (int i=0;i<num_iteration;i++){
         for(int j=0;j<num_objects;j++){
             fuerza_gravitatoria(particulas,j);
             aceleracion_y_velocidad(particulas,j);
             actualizar_posicion(particulas,j);
-            //Cambios de hoy borrar estas 3 lineas de abajo
             int pos = comprobar_colision(particulas, j);
             if(pos != -1){
                 colision_particulas(particulas,j, pos);
@@ -250,9 +252,7 @@ int main(int argc, char* argv[]) {
 
         }
     }
+    //escribir el final_config.txt
     final_config(particulas);
-    cout<<"terminado :)"<<endl;
-
-
     return 0;
 }
